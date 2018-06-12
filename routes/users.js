@@ -90,19 +90,7 @@ router.post('/', (req, res, next) => {
       location: tooSmallField || tooLargeField
     });
   }
-
-  //return User.find({ username })
-    // .count()
-    // .then(count => {
-    //   if (count > 0) {
-    //     return Promise.reject({
-    //       code: 422,
-    //       reason: 'ValidationError',
-    //       message: 'Username already taken',
-    //       location: 'username'
-    //     });
-    //   }
-    User.hashPassword(password)
+  User.hashPassword(password)
     .then(digest => {
       const newUser = {
         username,
