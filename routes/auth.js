@@ -5,6 +5,10 @@ const express = require('express');
 const passport = require('passport');
 const localStrategy = require('../passport/local');
 
+const { JWT_SECRET, JWT_EXPIRY } = require('../config');
+
+const jwt = require('jsonwebtoken');
+
 const router = express.Router();
 
 /**
@@ -13,11 +17,37 @@ const router = express.Router();
 const options = { session: false, failWithError: true };
 
 const localAuth = passport.authenticate('local', options);
+const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: true });
+
 
 // Configure Passport to utilize the strategy
 passport.use(localStrategy);
 
+// Protect endpoints using JWT Strategy
+//router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
+
 /* ========== POST/USER LOGIN AUTHENTICATION ========== */
-router.post('/', localAuth, (req, res) => res.json(req.user));
+// router.post('/', localAuth, (req, res) => res.json(req.user));
+
+
+function createAuthToken (user) {
+  return jwt.sign({ user }, JWT_SECRET, {
+    subject: user.username,
+    expiresIn: JWT_EXPIRY
+  });
+}
+
+/* ========== POST/USER LOGIN AUTHENTICATION USING JWT========== */
+router.post('/', localAuth, (req,res) => {
+  const authToken = createAuthToken(req.user);
+  res.json({ authToken });
+});
+
+
+/* ========== POST/REFRESH/USER LOGIN AUTHENTICATION ========== */
+router.post('/refresh', jwtAuth, (req, res) => {
+  const authToken = createAuthToken(req.user);
+  res.json({ authToken });
+});
 
 module.exports = router;
