@@ -76,7 +76,6 @@ router.get('/:id', (req, res, next) => {
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
   const { title, content, folderId, tags = [] } = req.body;
-  const { id } = req.params;
   const userId = req.user.id;
 
   /***** Never trust users - validate input *****/
@@ -152,7 +151,7 @@ router.put('/:id', (req, res, next) => {
 
   const updateNote = { title, content, folderId, tags };
 
-  Note.findByIdAndUpdate(id, updateNote, { new: true })
+  Note.findOneAndUpdate({ _id: id, userId }, updateNote, { new: true })
     .then(result => {
       if (result) {
         res.json(result);

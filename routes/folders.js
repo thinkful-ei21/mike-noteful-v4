@@ -12,10 +12,11 @@ const router = express.Router();
 // Protect endpoints using JWT Strategy
 router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
 
-/* ========== GET/READ ALL ITEMS ========== */
+/* ========== GET/READ ALL FOLDERS ========== */
 router.get('/', (req, res, next) => {
+  const userId = req.user.id;
 
-  Folder.find()
+  Folder.find({ userId })
     .sort('name')
     .then(results => {
       res.json(results);
@@ -25,9 +26,10 @@ router.get('/', (req, res, next) => {
     });
 });
 
-/* ========== GET/READ A SINGLE ITEM ========== */
+/* ========== GET/READ A SINGLE FOLDER ========== */
 router.get('/:id', (req, res, next) => {
   const { id } = req.params;
+  const userId = req.user.id;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     const err = new Error('The `id` is not valid');
@@ -35,7 +37,7 @@ router.get('/:id', (req, res, next) => {
     return next(err);
   }
 
-  Folder.findById(id)
+  Folder.findOne({ _id: id, userId })
     .then(result => {
       if (result) {
         res.json(result);
@@ -48,11 +50,11 @@ router.get('/:id', (req, res, next) => {
     });
 });
 
-/* ========== POST/CREATE AN ITEM ========== */
+/* ========== POST/CREATE A FOLDER ========== */
 router.post('/', (req, res, next) => {
   const { name } = req.body;
-
-  const newFolder = { name };
+  const userId = req.user.id;
+  const newFolder = { name, userId };
 
   /***** Never trust users - validate input *****/
   if (!name) {
@@ -74,10 +76,11 @@ router.post('/', (req, res, next) => {
     });
 });
 
-/* ========== PUT/UPDATE A SINGLE ITEM ========== */
+/* ========== PUT/UPDATE A SINGLE FOLDER ========== */
 router.put('/:id', (req, res, next) => {
   const { id } = req.params;
   const { name } = req.body;
+  const userId = req.user.id;
 
   /***** Never trust users - validate input *****/
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -94,7 +97,7 @@ router.put('/:id', (req, res, next) => {
 
   const updateFolder = { name };
 
-  Folder.findByIdAndUpdate(id, updateFolder, { new: true })
+  Folder.findOneAndUpdate({ _id: id, userId }, updateFolder, { new: true })
     .then(result => {
       if (result) {
         res.json(result);
@@ -111,9 +114,10 @@ router.put('/:id', (req, res, next) => {
     });
 });
 
-/* ========== DELETE/REMOVE A SINGLE ITEM ========== */
+/* ========== DELETE/REMOVE A SINGLE FOLDER ========== */
 router.delete('/:id', (req, res, next) => {
   const { id } = req.params;
+  const userId = req.user.id;
 
   /***** Never trust users - validate input *****/
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -123,7 +127,7 @@ router.delete('/:id', (req, res, next) => {
   }
 
   // ON DELETE SET NULL equivalent
-  const folderRemovePromise = Folder.findByIdAndRemove(id);
+  const folderRemovePromise = Folder.findOneAndDelete({ _id: id, userId });
   // ON DELETE CASCADE equivalent
   // const noteRemovePromise = Note.deleteMany({ folderId: id });
 
