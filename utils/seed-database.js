@@ -21,6 +21,9 @@ mongoose.connect(MONGODB_URI)
     return mongoose.connection.db.dropDatabase();
   })
   .then(() => {
+    return Promise.all(seedUser.map(user => User.hashPassword(user.password)));
+  })
+  .then(() => {
     console.info('Seeding Database');
     return Promise.all([
 
