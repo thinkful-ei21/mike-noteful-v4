@@ -23,19 +23,15 @@ const jwtAuth = passport.authenticate('jwt', { session: false, failWithError: tr
 // Configure Passport to utilize the strategy
 passport.use(localStrategy);
 
-// Protect endpoints using JWT Strategy
-//router.use('/', passport.authenticate('jwt', { session: false, failWithError: true }));
 
-/* ========== POST/USER LOGIN AUTHENTICATION ========== */
-// router.post('/', localAuth, (req, res) => res.json(req.user));
-
-
+// Accept a user object and call jwt.sign() to generate a JWT
 function createAuthToken (user) {
   return jwt.sign({ user }, JWT_SECRET, {
     subject: user.username,
     expiresIn: JWT_EXPIRY
   });
 }
+
 
 /* ========== POST/USER LOGIN AUTHENTICATION USING JWT========== */
 router.post('/', localAuth, (req,res) => {
