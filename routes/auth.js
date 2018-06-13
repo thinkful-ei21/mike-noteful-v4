@@ -34,7 +34,7 @@ function createAuthToken (user) {
 
 
 /* ========== POST/USER LOGIN AUTHENTICATION USING JWT========== */
-router.post('/', localAuth, (req,res) => {
+router.post('/login', localAuth, (req,res) => {
   const authToken = createAuthToken(req.user);
   res.json({ authToken });
 });
