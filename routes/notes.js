@@ -25,6 +25,7 @@ function validateFolderId(folderId, userId) {
   }
   return Folder.count({ _id: folderId, userId })
     .then(count => {
+      console.log(folderId, userId);
       if(count === 0) {
         const err = new Error('The folder `id` is not valid');
         err.status = 400;
@@ -138,17 +139,6 @@ router.post('/', (req, res, next) => {
     validateFolderId(folderId, userId),
     validateTagIds(tags, userId)
   ])
-    .catch(err => {
-      if (err === 'InvalidFolder') {
-        err = new Error('The folder is not valid');
-        err.status = 400;
-      }
-      if (err === 'InvalidTag') {
-        err = new Error('The tag is not valid');
-        err.status = 400;
-      }
-      next(err);
-    })
     .then(() => Note.create(newNote))
     .then(result => {
       res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
@@ -178,21 +168,14 @@ router.put('/:id', (req, res, next) => {
     return next(err);
   }
 
+  if(!folderId) {
+    updateNote.folderId = null;
+  }
+
   Promise.all([
     validateFolderId(folderId, userId),
     validateTagIds(tags, userId)
   ])
-    .catch(err => {
-      if (err === 'InvalidFolder') {
-        err = new Error('The folder is not valid');
-        err.status = 400;
-      }
-      if (err === 'InvalidTag') {
-        err = new Error('The tag is not valid');
-        err.status = 400;
-      }
-      next(err);
-    })
     .then(() => Note.findOneAndUpdate({ _id: id, userId }, updateNote, { new: true }))
     .then(result => {
       if (result) {
