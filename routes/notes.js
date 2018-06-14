@@ -26,7 +26,7 @@ function validateFolderId(folderId, userId) {
   return Folder.count({ _id: folderId, userId })
     .then(count => {
       if(count === 0) {
-        const err = new Error('The tags `id` is not valid');
+        const err = new Error('The folder `id` is not valid');
         err.status = 400;
         return Promise.reject(err);
       }
@@ -34,26 +34,31 @@ function validateFolderId(folderId, userId) {
 }
 
 function validateTagIds(tags, userId) {
-  if (tags=== undefined) {
+  if (tags === undefined) {
     return Promise.resolve();
   }
-  if(Array.isArray(tags)) {
+  if(!Array.isArray(tags)) {
     const err = new Error('The `tags` must be an array');
     err.status = 400;
     return Promise.reject(err);
   }
+
+  const badIds = tags.filter((tag) => !mongoose.Types.ObjectId.isValid(tag));
+  if (badIds.length) {
+    const err = new Error('The tags `id` is not valid');
+    err.status = 400;
+    return Promise.reject(err);
+  }
+ 
   return Tag.find( { $and: [{_id: { $in: tags }, userId }] })
     .then(results => {
       if(tags.length !== results.length) {
-        const err = new Error('The tags `id` is not valid');
+        const err = new Error('The tags array contains an invalid id');
         err.status = 400;
         return Promise.reject(err);
       }
     });
 }
-
-
-
 
 
 /* ========== GET/READ ALL ITEMS ========== */
