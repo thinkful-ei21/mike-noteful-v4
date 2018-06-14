@@ -1,8 +1,6 @@
 'use strict';
 
 const express = require('express');
-const mongoose = require('mongoose');
-const passport = require('passport');
 
 const User = require('../models/user');
 
@@ -11,7 +9,8 @@ const router = express.Router();
 
 /* ========== POST/CREATE USER ========== */
 router.post('/', (req, res, next) => {
-  const { fullname, username, password } = req.body;
+  let { fullname = '', username, password } = req.body;
+  fullname = fullname.trim();
 
   // VALIDATION ====== username and password fields are required
   const requiredFields = ['username', 'password'];
@@ -19,13 +18,8 @@ router.post('/', (req, res, next) => {
 
   if (missingField) {
     const err = new Error(`Missing '${missingField}' in request body`);
-    return res.status(422).json({
-      code: 422,
-      reason: 'ValidationError',
-      message: 'Missing field',
-      location: missingField
-    })
-      .then(err => next(err));
+    err.status = 422;
+    return next(err);
   }
 
   // VALIDATION ====== fields are type string
@@ -35,62 +29,52 @@ router.post('/', (req, res, next) => {
   );
 
   if (nonStringField) {
-    return res.status(422).json({
-      code: 422,
-      reason: 'ValidationError',
-      message: 'Incorrect field type: expected string',
-      location: nonStringField
-    });
+    const err = new Error('Incorrect field type: expected string');
+    err.status = 422;
+    return next(err);
   }
 
-  // VALIDATION ====== username and password should not have leading or trailing whitespace
+  // VALIDATION ====== username, fullname, and password should not have leading or trailing whitespace
   const explicityTrimmedFields = ['username', 'password'];
   const nonTrimmedField = explicityTrimmedFields.find(
     field => req.body[field].trim() !== req.body[field]
   );
 
   if (nonTrimmedField) {
-    return res.status(422).json({
-      code: 422,
-      reason: 'ValidationError',
-      message: 'Cannot start or end with whitespace',
-      location: nonTrimmedField
-    });
+    const err = new Error('Cannot start or end with whitespace');
+    err.status = 422;
+    return next(err);
   }
 
   // VALIDATION ====== username is a minimum of 1 character
   const sizedFields = {
-    username: {
-      min: 1
-    },
-    password: {
-      min: 8,
-      max: 72
-    }
+    username: { min: 1 },
+    password: { min: 8, max: 72 }
   };
+
   const tooSmallField = Object.keys(sizedFields).find(
-    field =>
-      'min' in sizedFields[field] &&
-            req.body[field].trim().length < sizedFields[field].min
+    field => 'min' in sizedFields[field] &&
+      req.body[field].trim().length < sizedFields[field].min
   );
+  if (tooSmallField) {
+    const min = sizedFields[tooSmallField].min;
+    const err = new Error(`Field: '${tooSmallField}' must be at least ${min} characters long`);
+    err.status = 422;
+    return next(err);
+  }
+
   const tooLargeField = Object.keys(sizedFields).find(
-    field =>
-      'max' in sizedFields[field] &&
-            req.body[field].trim().length > sizedFields[field].max
+    field => 'max' in sizedFields[field] &&
+      req.body[field].trim().length > sizedFields[field].max
   );
 
-  if (tooSmallField || tooLargeField) {
-    return res.status(422).json({
-      code: 422,
-      reason: 'ValidationError',
-      message: tooSmallField
-        ? `Must be at least ${sizedFields[tooSmallField]
-          .min} characters long`
-        : `Must be at most ${sizedFields[tooLargeField]
-          .max} characters long`,
-      location: tooSmallField || tooLargeField
-    });
+  if (tooLargeField) {
+    const max = sizedFields[tooLargeField].max;
+    const err = new Error(`Field: '${tooLargeField}' must be at most ${max} characters long`);
+    err.status = 422;
+    return next(err);
   }
+
   User.hashPassword(password)
     .then(digest => {
       const newUser = {
@@ -104,7 +88,6 @@ router.post('/', (req, res, next) => {
       return res.location(`api/users/${user.id}`).status(201).json(user);
     })
     .catch(err => {
-      console.log(err);
       if (err.code === 11000) {
         err = new Error('The username already exists');
         err.status = 400;

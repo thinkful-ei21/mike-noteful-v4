@@ -25,7 +25,6 @@ function validateFolderId(folderId, userId) {
   }
   return Folder.count({ _id: folderId, userId })
     .then(count => {
-      console.log(folderId, userId);
       if(count === 0) {
         const err = new Error('The folder `id` is not valid');
         err.status = 400;
