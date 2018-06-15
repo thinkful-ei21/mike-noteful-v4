@@ -57,7 +57,7 @@ describe('Noteful API - Notes', function () {
     return mongoose.disconnect();
   });
 
-  describe.only('GET /api/notes', function () {
+  describe('GET /api/notes', function () {
 
     it('should return the correct number of Notes', function () {
       return Promise.all([
@@ -75,7 +75,7 @@ describe('Noteful API - Notes', function () {
 
     it('should return a list with the correct right fields', function () {
       return Promise.all([
-        Note.find({ userId: user.id }).sort('name'),
+        Note.find({ userId: user.id }).sort({ updatedAt: 'desc' }),
         chai.request(app).get('/api/notes')
           .set('Authorization', `Bearer ${token}`)
       ])
@@ -97,12 +97,11 @@ describe('Noteful API - Notes', function () {
         });
     });
 
-    it.skip('should return correct search results for a searchTerm query', function () {
+    it('should return correct search results for a searchTerm query', function () {
       const searchTerm = 'gaga';
       //const re = new RegExp(searchTerm, 'i');
       const dbPromise = Note.find(
-        { userId: user.id },
-        {
+        { userId: user.id ,
           title: { $regex: searchTerm, $options: 'i' }
           //$or: [{ title: re }, { content: re }]
         }
@@ -130,7 +129,9 @@ describe('Noteful API - Notes', function () {
 
     it('should return correct search results for a folderId query', function () {
       let data;
-      return Folder.findOne()
+      return Folder.findOne(
+        { userId: user.id }
+      )
         .then((_data) => {
           data = _data;
           return Promise.all([
@@ -149,7 +150,7 @@ describe('Noteful API - Notes', function () {
 
     it('should return correct search results for a tagId query', function () {
       let data;
-      return Tag.findOne()
+      return Tag.findOne( { userId: user.id })
         .then((_data) => {
           data = _data;
           return Promise.all([
@@ -166,12 +167,12 @@ describe('Noteful API - Notes', function () {
         });
     });
 
-    it.skip('should return an empty array for an incorrect query', function () {
+    it('should return an empty array for an incorrect query', function () {
       const searchTerm = 'NotValid';
       // const re = new RegExp(searchTerm, 'i');
       const dbPromise = Note.find(
-        { userId: user.id },
-        {
+        { 
+          userId: user.id ,
           title: { $regex: searchTerm, $options: 'i' }
           // $or: [{ title: re }, { content: re }]
         });
@@ -325,7 +326,7 @@ describe('Noteful API - Notes', function () {
         content: 'Lorem ipsum dolor sit amet, sed do eiusmod tempor...'
       };
       let data;
-      return Note.findOne()
+      return Note.findOne({ userId: user.id })
         .then(_data => {
           data = _data;
           return chai.request(app)

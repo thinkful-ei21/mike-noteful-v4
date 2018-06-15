@@ -66,14 +66,14 @@ router.get('/', (req, res, next) => {
   const { searchTerm, folderId, tagId } = req.query;
   const userId = req.user.id;
 
-  let filter = {};
+  let filter = { userId };
 
   if (searchTerm) {
-    // filter.title = { $regex: searchTerm, $options: 'i' };
+    filter.title = { $regex: searchTerm, $options: 'i' };
 
     // Mini-Challenge: Search both `title` and `content`
-    const re = new RegExp(searchTerm, 'i');
-    filter.$or = [{ 'title': re }, { 'content': re }];
+    // const re = new RegExp(searchTerm, 'i');
+    // filter.$or = [{ 'title': re }, { 'content': re }];
   }
 
 
@@ -82,12 +82,12 @@ router.get('/', (req, res, next) => {
   }
 
   if (tagId) {
-    filter.tags = tagId;
+    filter.tags = tagId; 
   }
 
-  Note.find({ userId })
+  Note.find(filter)
     .populate('tags')
-    .sort('name')
+    .sort({ updatedAt: 'desc' })
     .then(results => {
       res.json(results);
     })

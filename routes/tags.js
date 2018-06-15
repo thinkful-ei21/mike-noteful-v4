@@ -16,8 +16,6 @@ router.use('/', passport.authenticate('jwt', { session: false, failWithError: tr
 /* ========== GET/READ ALL TAGS ========== */
 router.get('/', (req, res, next) => {
   const userId = req.user.id;
-  console.log(userId);
-
   Tag.find({ userId })
     .sort('name')
     .then(results => {
