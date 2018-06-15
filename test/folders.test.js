@@ -106,6 +106,7 @@ describe('Noteful API - Folders', function () {
           expect(res.body).to.have.all.keys('id', 'name', 'userId', 'createdAt', 'updatedAt');
           expect(res.body.id).to.equal(data.id);
           expect(res.body.name).to.equal(data.name);
+          expect(user.id).to.eql(data.userId.toString());
           expect(new Date(res.body.createdAt)).to.eql(data.createdAt);
           expect(new Date(res.body.updatedAt)).to.eql(data.updatedAt);
         });
