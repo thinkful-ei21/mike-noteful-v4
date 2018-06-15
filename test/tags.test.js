@@ -15,7 +15,7 @@ const { TEST_MONGODB_URI, JWT_SECRET } = require('../config');
 chai.use(chaiHttp);
 const expect = chai.expect;
 
-describe.only('Noteful API - Tags', function () {
+describe('Noteful API - Tags', function () {
 
   before(function () {
     return mongoose.connect(TEST_MONGODB_URI)
@@ -173,7 +173,7 @@ describe.only('Noteful API - Tags', function () {
     });
 
     it('should return an error when given a duplicate name', function () {
-      return Tag.findOne()
+      return Tag.findOne({ userId: user.id }).limit(2)
         .then(data => {
           const newItem = { name: data.name };
           return chai.request(app)
